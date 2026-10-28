@@ -1,0 +1,238 @@
+@use "sass:map";
+
+/* ---------- tokens ---------- */
+$ink: #0a0c11;
+$ink-soft: #1a1e28;
+$line: rgba(255, 255, 255, 0.08);
+$text: #eef0f6;
+$text-dim: #9aa3b5;
+
+$violet: #7c5cff;
+$coral: #ff7a59;
+$danger: #ff5d6c;
+
+$radius: 24px;
+$pill: 999px;
+$font: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+
+// key = expression.toLowerCase() ke sirf letters ("No face" -> noface)
+$moods: (
+  happy: #ffc857,
+  sad: #5b8def,
+  angry: #ff5d5d,
+  surprised: #b388ff,
+  disgusted: #6fd08c,
+  neutral: #9aa3b5,
+  noface: #6b7280,
+  detecting: #9aa3b5,
+);
+
+@mixin up($bp) {
+  @media (min-width: $bp) {
+    @content;
+  }
+}
+
+/* ---------- FaceExpression ---------- */
+.face-expression {
+  --pad: 16px;
+
+  position: relative;
+  width: min(100%, 520px);
+  margin: 0 auto;
+  padding: var(--pad);
+  border-radius: $radius;
+  border: 1px solid $line;
+  color: $text;
+  font-family: $font;
+  text-align: center;
+  overflow: hidden;
+  background: radial-gradient(120% 80% at 0% 0%, rgba($violet, 0.22), transparent 55%),
+    radial-gradient(100% 70% at 100% 100%, rgba($coral, 0.16), transparent 55%),
+    $ink;
+  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+  @include up(480px) {
+    --pad: 24px;
+  }
+  @include up(768px) {
+    --pad: 32px;
+  }
+
+  /* ---------- video (cameraOn) ---------- */
+  .video {
+    display: none;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    margin: 0 auto;
+    border-radius: $radius - 6px;
+    background: #000;
+    transform: scaleX(-1); // mirror view
+    box-shadow: 0 0 0 2px rgba($violet, 0.7), 0 0 0 8px rgba($violet, 0.1),
+      0 20px 60px -20px rgba($violet, 0.55);
+
+    &.on {
+      display: block;
+    }
+  }
+
+  /* ---------- permission screen (!cameraOn) ---------- */
+  .permission {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 28px 20px;
+    border-radius: 16px;
+    border: 1px solid $line;
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+
+    @include up(480px) {
+      padding: 36px 32px;
+    }
+
+    .icon {
+      display: grid;
+      place-items: center;
+      width: 64px;
+      height: 64px;
+      font-size: 28px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: linear-gradient(135deg, rgba($violet, 0.35), rgba($coral, 0.25));
+      box-shadow: 0 10px 30px -10px rgba($violet, 0.6);
+    }
+
+    p {
+      margin: 0;
+      max-width: 34ch;
+      font-size: 0.92rem;
+      line-height: 1.6;
+      color: $text-dim;
+    }
+
+    /* error message */
+    .error {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      color: #ffb4bb;
+      background: rgba($danger, 0.1);
+      border: 1px solid rgba($danger, 0.3);
+    }
+  }
+
+  /* ---------- expression (h2) ---------- */
+  .expression {
+    --mood: #{map.get($moods, neutral)};
+
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 0 4px;
+    padding: 10px 22px;
+    font-size: clamp(1.15rem, 1rem + 1vw, 1.6rem);
+    font-weight: 700;
+    text-transform: capitalize;
+    color: var(--mood);
+    border-radius: $pill;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid color-mix(in srgb, var(--mood) 45%, transparent);
+    box-shadow: 0 0 32px -8px var(--mood);
+    transition: color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+
+    &::before {
+      content: "";
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--mood);
+      box-shadow: 0 0 12px var(--mood);
+    }
+
+    @each $name, $color in $moods {
+      &.#{$name} {
+        --mood: #{$color};
+      }
+    }
+  }
+
+  /* ---------- buttons: init / detect / stop ---------- */
+  .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 16px;
+
+    @include up(480px) {
+      flex-direction: row;
+      justify-content: center;
+    }
+  }
+
+  button {
+    appearance: none;
+    cursor: pointer;
+    min-height: 46px;
+    padding: 0 24px;
+    font: 600 0.92rem/1 $font;
+    color: $text;
+    border-radius: $pill;
+    border: 1px solid $line;
+    background: $ink-soft;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+    }
+    &:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+    &:focus-visible {
+      outline: 2px solid $violet;
+      outline-offset: 3px;
+    }
+    &:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    &.init,
+    &.detect {
+      border: none;
+      color: #fff;
+      background: linear-gradient(135deg, $violet, $coral);
+      box-shadow: 0 12px 28px -10px rgba($violet, 0.7);
+    }
+
+    &.init {
+      width: 100%;
+
+      @include up(480px) {
+        width: auto;
+        min-width: 240px;
+      }
+    }
+
+    &.stop {
+      background: transparent;
+      color: $text-dim;
+
+      &:hover:not(:disabled) {
+        color: $text;
+        background: rgba(255, 255, 255, 0.05);
+      }
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .face-expression * {
+    transition: none !important;
+  }
+}
