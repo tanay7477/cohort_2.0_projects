@@ -1,6 +1,8 @@
-const userModel = require('../model/userModel')
+const userModel = require('../model/user.model')
+const blacklistModel = require('../model/blacklist.model')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+const redis = require('../config/cache')
 
 async function registerUser(req, res) {
   try {
@@ -66,7 +68,7 @@ async function loginUser(req, res) {
 
     const user = await userModel.findOne({
       $or: [{ email }, { username }],
-    });
+    }).select('+password');
 
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
@@ -98,7 +100,38 @@ async function loginUser(req, res) {
   }
 }
 
+async function getMe(req,res){
+
+  const user = await userModel.findById(req.user.id)
+  // response main jo user bhejte isme pass bhi chla jata
+  //so .select('-password') use kr skte but hr jagah isse likhnege to code jada ho jaega instead schema main kr do select false
+  
+  res.status(200).json({
+    "messaage":"user fetched successFully",
+    user
+  })
+
+}
+
+async function logoutUser(req,res){
+  const token = req.cookies.token
+
+  res.clearCookie('token')
+
+  await redis.set(token,Date.now().toString(),"EX",60*60*24)
+
+  res.status(201).json({
+      message:"logout successfully done!"
+    })
+
+}
+/**
+ * redis stores data in key value pair
+ */
+
 module.exports = {
     registerUser,
-    loginUser
+    loginUser,
+    getMe,
+    logoutUser
 }
