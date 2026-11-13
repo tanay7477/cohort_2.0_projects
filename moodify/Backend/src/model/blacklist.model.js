@@ -14,3 +14,5 @@ const blacklistSchema = new mongoose.Schema({
 const blacklistModel = mongoose.model('blacklist' , blacklistSchema)
 
 module.exports = blacklistModel
+
+//ab hum isse use nhi kr rhe hai we implement redis for token blacklisting so we can remove this file in future
